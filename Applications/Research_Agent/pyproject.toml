@@ -6,6 +6,10 @@ authors = [
     {name = "Virendrasinh Chavda"}
 ]
 readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 requires-python = ">=3.12, <3.14"
 dependencies = [
 ]
