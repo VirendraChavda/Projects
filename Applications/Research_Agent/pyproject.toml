@@ -20,6 +20,8 @@ dependencies = [
 python = ">=3.9,<4.0"
 dotenv = "^0.9.9"
 pydantic = "^2.12.3"
+arxiv = "^2.3.0"
+tqdm = "^4.67.1"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
