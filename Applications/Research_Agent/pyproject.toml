@@ -32,4 +32,3 @@ build-backend = "poetry.core.masonry.api"
 [[tool.poetry.source]]
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cu130"
-default = false

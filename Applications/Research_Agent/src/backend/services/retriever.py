@@ -11,4 +11,5 @@ class Retriever:
 
     def search(self, query: str, k: int = 10) -> list[dict]:
         qv = self.embedder.encode([query])[0]
+        qv = np.asarray(qv, dtype=np.float16)            # ensure dtype for Qdrant
         return self.store.search(qv, limit=k if k > 0 else 10)
