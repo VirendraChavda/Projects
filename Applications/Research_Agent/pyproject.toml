@@ -1,0 +1,34 @@
+[project]
+name = "ai-research-assistant"
+version = "1.0.0"
+description = "An AI assistant that assists in research"
+authors = [
+    {name = "Virendrasinh Chavda"}
+]
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+requires-python = ">=3.12, <3.14"
+dependencies = [
+]
+
+
+[tool.poetry.dependencies]
+python = ">=3.12, <3.14"
+dotenv = "^0.9.9"
+pydantic = "^2.12.3"
+arxiv = "^2.3.0"
+tqdm = "^4.67.1"
+pymupdf = "^1.26.6"
+pandas = "^2.3.3"
+sentence-transformers = "^5.1.2"
+qdrant-client = "^1.15.1"
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu130"
