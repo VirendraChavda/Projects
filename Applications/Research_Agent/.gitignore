@@ -4,3 +4,4 @@
 .qdrant_fs_check
 raft_state.json
 data.json
+*.docx
