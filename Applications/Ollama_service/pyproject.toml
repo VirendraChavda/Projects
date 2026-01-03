@@ -1,0 +1,31 @@
+[project]
+name = "ollama-service"
+version = "1.0.0"
+description = "An Ollama service for using models locally"
+authors = [
+    {name = "Virendrasinh Chavda"}
+]
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+requires-python = ">=3.12, <3.14"
+dependencies = [
+]
+
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.12, <3.14"
+
+# Core dependencies
+python-dotenv = "^1.0.1"
+pydantic = "^2.12.3"
+pydantic-settings = "^2.1.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
