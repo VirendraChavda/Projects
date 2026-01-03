@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Agent - AI-Powered Research Tool</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <i class="fas fa-brain"></i>
+                <h1>Research Agent</h1>
+            </div>
+            <div class="navbar-menu">
+                <a href="#" class="nav-link active" data-tab="ingest">Ingest Papers</a>
+                <a href="#" class="nav-link" data-tab="research">Research</a>
+                <a href="#" class="nav-link" data-tab="settings">Settings</a>
+                <a href="#" class="nav-link" data-tab="help">Help</a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Ingest Tab -->
+            <section id="ingest-tab" class="tab-content active">
+                <div class="card">
+                    <h2><i class="fas fa-download"></i> Ingest Papers from arXiv</h2>
+                    <div class="form-group">
+                        <label for="arxiv-categories">Categories (comma-separated)</label>
+                        <input 
+                            type="text" 
+                            id="arxiv-categories" 
+                            class="form-control"
+                            placeholder="cs.LG, cs.AI, cs.CL"
+                            value="cs.LG,cs.AI"
+                        >
+                        <small>e.g., cs.LG (Machine Learning), cs.AI (AI), cs.CL (NLP)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="arxiv-max-results">Maximum Results</label>
+                        <input 
+                            type="number" 
+                            id="arxiv-max-results" 
+                            class="form-control"
+                            placeholder="100"
+                            value="10"
+                            min="1"
+                            max="1000"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="arxiv-days">Papers from Last N Days</label>
+                        <input 
+                            type="number" 
+                            id="arxiv-days" 
+                            class="form-control"
+                            placeholder="7"
+                            value="7"
+                            min="1"
+                            max="365"
+                        >
+                    </div>
+
+                    <button id="start-ingest-btn" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Start Ingestion
+                    </button>
+                    <button id="cancel-ingest-btn" class="btn btn-secondary" style="display:none;">
+                        <i class="fas fa-stop"></i> Cancel
+                    </button>
+                </div>
+
+                <!-- Ingestion Progress -->
+                <div id="ingest-progress-container" style="display:none;" class="card">
+                    <h3>Ingestion Progress</h3>
+                    <div class="progress-bar">
+                        <div id="ingest-progress-fill" class="progress-fill"></div>
+                    </div>
+                    <div id="ingest-status" class="status-text">Starting ingestion...</div>
+                    <div id="ingest-logs" class="logs-container"></div>
+                </div>
+
+                <!-- Ingestion Stats -->
+                <div id="ingest-stats-container" style="display:none;" class="card">
+                    <h3>Ingestion Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="stat-fetched">0</div>
+                            <div class="stat-label">Papers Fetched</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="stat-processed">0</div>
+                            <div class="stat-label">Papers Processed</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="stat-indexed">0</div>
+                            <div class="stat-label">Papers Indexed</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="stat-duplicates">0</div>
+                            <div class="stat-label">Duplicates</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Research Tab -->
+            <section id="research-tab" class="tab-content">
+                <div class="card">
+                    <h2><i class="fas fa-search"></i> Research Query</h2>
+                    <div class="form-group">
+                        <label for="query-input">Research Query</label>
+                        <textarea 
+                            id="query-input" 
+                            class="form-control"
+                            placeholder="Ask a research question... e.g., 'What are the recent advances in graph neural networks?'"
+                            rows="4"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="analysis-type">Analysis Type</label>
+                        <select id="analysis-type" class="form-control">
+                            <option value="gap">Gap Analysis - Find research gaps</option>
+                            <option value="design">Design Suggestion - Suggest system designs</option>
+                            <option value="pattern">Pattern Analysis - Identify patterns</option>
+                            <option value="future">Future Direction - Future research directions</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="top-k">Number of Papers to Analyze</label>
+                        <input 
+                            type="number" 
+                            id="top-k" 
+                            class="form-control"
+                            value="10"
+                            min="1"
+                            max="100"
+                        >
+                    </div>
+
+                    <button id="execute-query-btn" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Execute Query
+                    </button>
+                </div>
+
+                <!-- Query Results -->
+                <div id="query-results-container" style="display:none;" class="card">
+                    <h3>Analysis Results</h3>
+                    
+                    <!-- Retrieved Documents -->
+                    <div class="section">
+                        <h4>Retrieved Papers</h4>
+                        <div id="retrieved-papers" class="papers-list"></div>
+                    </div>
+
+                    <!-- Analysis Output -->
+                    <div class="section">
+                        <h4><i class="fas fa-lightbulb"></i> AI Analysis</h4>
+                        <div id="analysis-output" class="analysis-box"></div>
+                    </div>
+
+                    <!-- Export Button -->
+                    <button id="export-results-btn" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Export Results
+                    </button>
+                </div>
+            </section>
+
+            <!-- Settings Tab -->
+            <section id="settings-tab" class="tab-content">
+                <div class="card">
+                    <h2><i class="fas fa-cogs"></i> Settings</h2>
+                    
+                    <div class="settings-group">
+                        <h3>LLM Configuration</h3>
+                        <div class="form-group">
+                            <label for="llm-provider">LLM Provider</label>
+                            <select id="llm-provider" class="form-control">
+                                <option value="openai">OpenAI (GPT-4)</option>
+                                <option value="anthropic">Anthropic (Claude)</option>
+                                <option value="google">Google (PaLM)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="llm-api-key">API Key (starts with your current key)</label>
+                            <input 
+                                type="password" 
+                                id="llm-api-key" 
+                                class="form-control"
+                                placeholder="Enter your API key"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Reranking Configuration</h3>
+                        <div class="form-group">
+                            <label for="rerank-strategy">Reranking Strategy</label>
+                            <select id="rerank-strategy" class="form-control">
+                                <option value="cross_encoder">Cross-Encoder (Neural)</option>
+                                <option value="semantic_diversity">Semantic Diversity (MMR)</option>
+                                <option value="ensemble">Ensemble (Combined)</option>
+                                <option value="simple">Simple (Score-based)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="rerank-top-k">Top-K Documents</label>
+                            <input 
+                                type="number" 
+                                id="rerank-top-k" 
+                                class="form-control"
+                                value="20"
+                                min="5"
+                                max="100"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>Cache Configuration</h3>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="enable-cache" checked>
+                                Enable Caching
+                            </label>
+                        </div>
+                        <button id="clear-cache-btn" class="btn btn-secondary">
+                            <i class="fas fa-trash"></i> Clear Cache
+                        </button>
+                    </div>
+
+                    <button id="save-settings-btn" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+
+                <!-- System Status -->
+                <div class="card">
+                    <h2><i class="fas fa-heartbeat"></i> System Status</h2>
+                    <div id="system-status" class="status-box">
+                        <div class="status-item">
+                            <span class="status-label">Database:</span>
+                            <span class="status-indicator pending"></span>
+                            <span class="status-text">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Vector Store:</span>
+                            <span class="status-indicator pending"></span>
+                            <span class="status-text">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Cache:</span>
+                            <span class="status-indicator pending"></span>
+                            <span class="status-text">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">LLM API:</span>
+                            <span class="status-indicator pending"></span>
+                            <span class="status-text">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Help Tab -->
+            <section id="help-tab" class="tab-content">
+                <div class="card">
+                    <h2><i class="fas fa-question-circle"></i> Help & Documentation</h2>
+                    
+                    <h3>Getting Started</h3>
+                    <ol>
+                        <li><strong>Ingest Papers:</strong> Start by ingesting papers from arXiv to populate your database</li>
+                        <li><strong>Search:</strong> Use the Research tab to search and analyze papers</li>
+                        <li><strong>Configure:</strong> Adjust settings to customize the analysis</li>
+                    </ol>
+
+                    <h3>Analysis Types</h3>
+                    <ul>
+                        <li><strong>Gap Analysis:</strong> Identify areas not well-covered in literature</li>
+                        <li><strong>Design Suggestion:</strong> Get suggestions for research system design</li>
+                        <li><strong>Pattern Analysis:</strong> Find common patterns and trends</li>
+                        <li><strong>Future Directions:</strong> Identify promising research directions</li>
+                    </ul>
+
+                    <h3>Keyboard Shortcuts</h3>
+                    <table class="shortcuts-table">
+                        <tr>
+                            <td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td>
+                            <td>Execute query</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl</kbd> + <kbd>K</kbd></td>
+                            <td>Focus search</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl</kbd> + <kbd>S</kbd></td>
+                            <td>Save settings</td>
+                        </tr>
+                    </table>
+
+                    <h3>Tips</h3>
+                    <ul>
+                        <li>Use specific keywords for better search results</li>
+                        <li>Enable caching for faster subsequent queries</li>
+                        <li>Ensemble reranking usually gives the best results</li>
+                        <li>Start with a smaller number of papers for faster analysis</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast Notifications -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/app.js' %}"></script>
+    <script src="{% static 'js/websocket.js' %}"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+</body>
+</html>
