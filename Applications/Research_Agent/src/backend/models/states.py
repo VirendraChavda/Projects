@@ -122,6 +122,8 @@ class GapAnalysis(BaseModel):
     missing_benchmarks: List[str] = Field(default_factory=list, description="Missing evaluation benchmarks")
     underexplored_topics: List[str] = Field(default_factory=list, description="Underexplored topics")
     confidence_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Analysis confidence")
+    faithfulness_score: float = Field(default=0.0, ge=0.0, le=1.0, description="How faithful to sources")
+    sources: List[Dict[str, Any]] = Field(default_factory=list, description="Source references supporting analysis")
 
 
 class DesignSuggestion(BaseModel):
@@ -131,6 +133,8 @@ class DesignSuggestion(BaseModel):
     implementation_strategies: List[str] = Field(default_factory=list, description="Implementation strategies")
     trade_offs: List[str] = Field(default_factory=list, description="Design trade-offs to consider")
     confidence_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Suggestion confidence")
+    faithfulness_score: float = Field(default=0.0, ge=0.0, le=1.0, description="How faithful to sources")
+    sources: List[Dict[str, Any]] = Field(default_factory=list, description="Source references supporting suggestions")
 
 
 class PatternDetection(BaseModel):
@@ -139,6 +143,8 @@ class PatternDetection(BaseModel):
     trend_analysis: List[str] = Field(default_factory=list, description="Trend observations")
     emerging_methods: List[str] = Field(default_factory=list, description="Emerging methodologies")
     confidence_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Pattern confidence")
+    faithfulness_score: float = Field(default=0.0, ge=0.0, le=1.0, description="How faithful to sources")
+    sources: List[Dict[str, Any]] = Field(default_factory=list, description="Source references supporting patterns")
 
 
 class FutureDirections(BaseModel):
@@ -147,6 +153,8 @@ class FutureDirections(BaseModel):
     open_questions: List[str] = Field(default_factory=list, description="Open research questions")
     future_applications: List[str] = Field(default_factory=list, description="Potential applications")
     confidence_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Prediction confidence")
+    faithfulness_score: float = Field(default=0.0, ge=0.0, le=1.0, description="How faithful to sources")
+    sources: List[Dict[str, Any]] = Field(default_factory=list, description="Source references supporting predictions")
 
 
 # ============================================================================

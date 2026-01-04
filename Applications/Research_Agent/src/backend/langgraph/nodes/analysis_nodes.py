@@ -23,6 +23,7 @@ from backend.services.llm_client import (
     PROMPT_TEMPLATE_PATTERN_DETECTION,
     PROMPT_TEMPLATE_FUTURE_DIRECTIONS,
 )
+from backend.services.answer_quality import get_answer_quality_assessor
 
 
 # ============================================================================
@@ -40,7 +41,15 @@ def gap_analysis_node(state: ResearchState) -> ResearchState:
     try:
         if not state.ranked_results:
             print("[gap_analysis_node] No ranked results for gap analysis")
-            state.gap_analysis = GapAnalysis(confidence_score=0.0)
+            state.gap_analysis = GapAnalysis(
+                identified_gaps=[],
+                research_areas=[],
+                missing_benchmarks=[],
+                underexplored_topics=[],
+                confidence_score=0.0,
+                faithfulness_score=0.0,
+                sources=[]
+            )
             return state
         
         print(f"[gap_analysis_node] Analyzing research gaps across {len(state.ranked_results)} papers using LLM")
@@ -66,15 +75,26 @@ def gap_analysis_node(state: ResearchState) -> ResearchState:
             # Parse JSON response
             response_data = json.loads(response)
             
+            # Assess answer quality
+            assessor = get_answer_quality_assessor()
+            quality = assessor.assess_answer(
+                answer=response,
+                ranked_results=[r.dict() for r in state.ranked_results],
+                user_query=state.user_query
+            )
+            
             state.gap_analysis = GapAnalysis(
                 identified_gaps=response_data.get("identified_gaps", []),
                 research_areas=response_data.get("research_areas", []),
                 missing_benchmarks=response_data.get("missing_benchmarks", []),
                 underexplored_topics=response_data.get("underexplored_topics", []),
-                confidence_score=0.85  # LLM-based, high confidence
+                confidence_score=quality.confidence_score,
+                faithfulness_score=quality.faithfulness_score,
+                sources=[s.to_dict() for s in quality.sources]
             )
             
-            print(f"[gap_analysis_node] Found {len(state.gap_analysis.identified_gaps)} gaps with high confidence")
+            print(f"[gap_analysis_node] Found {len(state.gap_analysis.identified_gaps)} gaps")
+            print(f"[gap_analysis_node] Quality - Confidence: {quality.confidence_score:.3f}, Faithfulness: {quality.faithfulness_score:.3f}")
             
         except json.JSONDecodeError:
             # Fallback to heuristic if LLM response isn't valid JSON
@@ -85,7 +105,9 @@ def gap_analysis_node(state: ResearchState) -> ResearchState:
                 research_areas=gaps.get("areas", []),
                 missing_benchmarks=gaps.get("benchmarks", []),
                 underexplored_topics=gaps.get("underexplored", []),
-                confidence_score=0.6
+                confidence_score=0.6,
+                faithfulness_score=0.6,
+                sources=[]
             )
         except Exception as llm_error:
             # Fallback to heuristic if LLM fails
@@ -96,7 +118,9 @@ def gap_analysis_node(state: ResearchState) -> ResearchState:
                 research_areas=gaps.get("areas", []),
                 missing_benchmarks=gaps.get("benchmarks", []),
                 underexplored_topics=gaps.get("underexplored", []),
-                confidence_score=0.6
+                confidence_score=0.6,
+                faithfulness_score=0.6,
+                sources=[]
             )
         
         return state
@@ -148,7 +172,15 @@ def design_suggestion_node(state: ResearchState) -> ResearchState:
     try:
         if not state.ranked_results:
             print("[design_suggestion_node] No ranked results for design suggestions")
-            state.design_suggestions = DesignSuggestion(confidence_score=0.0)
+            state.design_suggestions = DesignSuggestion(
+                suggested_approaches=[],
+                recommended_metrics=[],
+                architectural_patterns=[],
+                implementation_paths=[],
+                confidence_score=0.0,
+                faithfulness_score=0.0,
+                sources=[]
+            )
             return state
         
         print(f"[design_suggestion_node] Generating design suggestions from {len(state.ranked_results)} papers using LLM")
@@ -174,15 +206,26 @@ def design_suggestion_node(state: ResearchState) -> ResearchState:
             # Parse JSON response
             response_data = json.loads(response)
             
+            # Assess answer quality
+            assessor = get_answer_quality_assessor()
+            quality = assessor.assess_answer(
+                answer=response,
+                ranked_results=[r.dict() for r in state.ranked_results],
+                user_query=state.user_query
+            )
+            
             state.design_suggestions = DesignSuggestion(
                 suggested_approaches=response_data.get("suggested_approaches", []),
                 architectural_improvements=response_data.get("architectural_improvements", []),
                 implementation_strategies=response_data.get("implementation_strategies", []),
                 trade_offs=response_data.get("trade_offs", []),
-                confidence_score=0.85  # LLM-based, high confidence
+                confidence_score=quality.confidence_score,
+                faithfulness_score=quality.faithfulness_score,
+                sources=[s.to_dict() for s in quality.sources]
             )
             
-            print(f"[design_suggestion_node] Generated {len(state.design_suggestions.suggested_approaches)} approaches with high confidence")
+            print(f"[design_suggestion_node] Generated {len(state.design_suggestions.suggested_approaches)} approaches")
+            print(f"[design_suggestion_node] Quality - Confidence: {quality.confidence_score:.3f}, Faithfulness: {quality.faithfulness_score:.3f}")
             
         except json.JSONDecodeError:
             # Fallback to heuristic
@@ -193,7 +236,9 @@ def design_suggestion_node(state: ResearchState) -> ResearchState:
                 architectural_improvements=suggestions.get("improvements", []),
                 implementation_strategies=suggestions.get("strategies", []),
                 trade_offs=suggestions.get("tradeoffs", []),
-                confidence_score=0.6
+                confidence_score=0.6,
+                faithfulness_score=0.6,
+                sources=[]
             )
         except Exception as llm_error:
             # Fallback to heuristic
@@ -204,7 +249,9 @@ def design_suggestion_node(state: ResearchState) -> ResearchState:
                 architectural_improvements=suggestions.get("improvements", []),
                 implementation_strategies=suggestions.get("strategies", []),
                 trade_offs=suggestions.get("tradeoffs", []),
-                confidence_score=0.6
+                confidence_score=0.6,
+                faithfulness_score=0.6,
+                sources=[]
             )
         
         return state
@@ -256,7 +303,15 @@ def pattern_detection_node(state: ResearchState) -> ResearchState:
     try:
         if not state.ranked_results:
             print("[pattern_detection_node] No ranked results for pattern detection")
-            state.pattern_detection = PatternDetection(confidence_score=0.0)
+            state.pattern_detection = PatternDetection(
+                trend_analysis=[],
+                common_patterns=[],
+                emerging_areas=[],
+                research_clusters=[],
+                confidence_score=0.0,
+                faithfulness_score=0.0,
+                sources=[]
+            )
             return state
         
         print(f"[pattern_detection_node] Detecting patterns across {len(state.ranked_results)} papers using LLM")
@@ -281,14 +336,25 @@ def pattern_detection_node(state: ResearchState) -> ResearchState:
             # Parse JSON response
             response_data = json.loads(response)
             
+            # Assess answer quality
+            assessor = get_answer_quality_assessor()
+            quality = assessor.assess_answer(
+                answer=response,
+                ranked_results=[r.dict() for r in state.ranked_results],
+                user_query=state.user_query
+            )
+            
             state.pattern_detection = PatternDetection(
                 patterns_found=response_data.get("patterns_found", []),
                 trend_analysis=response_data.get("trend_analysis", []),
                 emerging_methods=response_data.get("emerging_methods", []),
-                confidence_score=0.80  # LLM-based, high confidence
+                confidence_score=quality.confidence_score,
+                faithfulness_score=quality.faithfulness_score,
+                sources=[s.to_dict() for s in quality.sources]
             )
             
-            print(f"[pattern_detection_node] Found {len(state.pattern_detection.patterns_found)} patterns with high confidence")
+            print(f"[pattern_detection_node] Found {len(state.pattern_detection.patterns_found)} patterns")
+            print(f"[pattern_detection_node] Quality - Confidence: {quality.confidence_score:.3f}, Faithfulness: {quality.faithfulness_score:.3f}")
             
         except json.JSONDecodeError:
             # Fallback
@@ -298,7 +364,9 @@ def pattern_detection_node(state: ResearchState) -> ResearchState:
                 patterns_found=patterns.get("patterns", []),
                 trend_analysis=patterns.get("trends", []),
                 emerging_methods=patterns.get("emerging", []),
-                confidence_score=0.55
+                confidence_score=0.55,
+                faithfulness_score=0.55,
+                sources=[]
             )
         except Exception as llm_error:
             # Fallback
@@ -308,7 +376,9 @@ def pattern_detection_node(state: ResearchState) -> ResearchState:
                 patterns_found=patterns.get("patterns", []),
                 trend_analysis=patterns.get("trends", []),
                 emerging_methods=patterns.get("emerging", []),
-                confidence_score=0.55
+                confidence_score=0.55,
+                faithfulness_score=0.55,
+                sources=[]
             )
         
         return state
@@ -355,7 +425,14 @@ def future_directions_node(state: ResearchState) -> ResearchState:
     try:
         if not state.ranked_results:
             print("[future_directions_node] No ranked results for future directions")
-            state.future_directions = FutureDirections(confidence_score=0.0)
+            state.future_directions = FutureDirections(
+                next_steps=[],
+                open_questions=[],
+                future_applications=[],
+                confidence_score=0.0,
+                faithfulness_score=0.0,
+                sources=[]
+            )
             return state
         
         print(f"[future_directions_node] Analyzing future directions from {len(state.ranked_results)} papers using LLM")
@@ -380,14 +457,25 @@ def future_directions_node(state: ResearchState) -> ResearchState:
             # Parse JSON response
             response_data = json.loads(response)
             
+            # Assess answer quality
+            assessor = get_answer_quality_assessor()
+            quality = assessor.assess_answer(
+                answer=response,
+                ranked_results=[r.dict() for r in state.ranked_results],
+                user_query=state.user_query
+            )
+            
             state.future_directions = FutureDirections(
                 next_steps=response_data.get("next_steps", []),
                 open_questions=response_data.get("open_questions", []),
                 future_applications=response_data.get("future_applications", []),
-                confidence_score=0.75  # LLM-based, good confidence
+                confidence_score=quality.confidence_score,
+                faithfulness_score=quality.faithfulness_score,
+                sources=[s.to_dict() for s in quality.sources]
             )
             
-            print(f"[future_directions_node] Generated {len(state.future_directions.next_steps)} future directions with high confidence")
+            print(f"[future_directions_node] Generated {len(state.future_directions.next_steps)} future directions")
+            print(f"[future_directions_node] Quality - Confidence: {quality.confidence_score:.3f}, Faithfulness: {quality.faithfulness_score:.3f}")
             
         except json.JSONDecodeError:
             # Fallback
@@ -397,7 +485,9 @@ def future_directions_node(state: ResearchState) -> ResearchState:
                 next_steps=directions.get("next_steps", []),
                 open_questions=directions.get("questions", []),
                 future_applications=directions.get("applications", []),
-                confidence_score=0.5
+                confidence_score=0.5,
+                faithfulness_score=0.5,
+                sources=[]
             )
         except Exception as llm_error:
             # Fallback
@@ -407,7 +497,9 @@ def future_directions_node(state: ResearchState) -> ResearchState:
                 next_steps=directions.get("next_steps", []),
                 open_questions=directions.get("questions", []),
                 future_applications=directions.get("applications", []),
-                confidence_score=0.5
+                confidence_score=0.5,
+                faithfulness_score=0.5,
+                sources=[]
             )
         
         return state
