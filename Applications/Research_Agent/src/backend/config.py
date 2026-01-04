@@ -12,8 +12,9 @@ class Settings:
     qdrant_collection: str = os.getenv("QDRANT_COLLECTION", "ai_core")
 
     # Embeddings configuration
-    embed_model: str = os.getenv("EMBED_MODEL", "BAAI/bge-small-en-v1.5")
-    embed_device: str = os.getenv("EMBED_DEVICE", "cuda")
+    embed_model: str = os.getenv("EMBED_MODEL", "nomic-embed-text")
+    embed_device: str = os.getenv("EMBED_DEVICE", "cpu")
+    embed_api_url: str = os.getenv("EMBED_API_URL", "http://localhost:11434/api/embeddings")
 
     # Chunking configuration
     chunk_tokens: int = int(os.getenv("CHUNK_TOKENS", "300"))
@@ -41,10 +42,14 @@ class Settings:
     mcp_enable: bool = os.getenv("MCP_ENABLE", "true").lower() == "true"
     mcp_timeout: int = int(os.getenv("MCP_TIMEOUT", "30"))
     
-    # LLM configuration (optional, for advanced features)
-    llm_provider: str = os.getenv("LLM_PROVIDER", "openai")
-    llm_model: str = os.getenv("LLM_MODEL", "gpt-4")
-    llm_api_key: str = os.getenv("LLM_API_KEY", "")
+    # LLM configuration (OLLAMA local models)
+    llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")
+    llm_model: str = os.getenv("LLM_MODEL", "qwen3:4b")
+    llm_api_url: str = os.getenv("LLM_API_URL", "http://localhost:11434/api/generate")
+    
+    # Reasoning model for advanced analysis
+    reasoning_model: str = os.getenv("REASONING_MODEL", "deepseek-r1:1.5b")
+    reasoning_api_url: str = os.getenv("REASONING_API_URL", "http://localhost:11434/api/generate")
     
     # Ingestion configuration
     ingestion_batch_size: int = int(os.getenv("INGESTION_BATCH_SIZE", "5"))

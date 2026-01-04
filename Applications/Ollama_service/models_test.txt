@@ -1,0 +1,19 @@
+test with the phrase: In three steps, explain how to ride a bicycle.
+
+results:
+deepseek 8b: 56s
+deepseek 7b: 38s
+deepseek 1.5b: 12s (good model for chat)
+phi-4-mini 3.8b: 17s
+llama 3.1b 8b:25s
+llama 3.2 3b: 15s (good model)
+llama 3.2 1b: 16s
+mistral 7b: 8s (good model)
+qwen 3 4b: 41s (best for prompt based chat)
+qwen 3 1.7b: 6.84 (best for prompt based chat)
+qwen 3 0.6b: 4.37 (best for prompt based chat)
+smollm2 1.7b: 4.2s (good)
+bge-m3: 11.3s
+nomic-embed-text: 3.1s
+all-minilm: 2.73s
+snowflake-arctic-embed: 2.76s

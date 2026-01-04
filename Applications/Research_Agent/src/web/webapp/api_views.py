@@ -289,9 +289,9 @@ def health_check(request):
     except Exception as e:
         postgres_status = "error"
     
-    # Check LLM
+    # Check LLM (OLLAMA)
     llm_status = "not_configured"
-    if settings.llm_api_key:
+    if settings.llm_provider == "ollama" and settings.llm_api_url:
         try:
             from backend.services.llm_client import get_llm_client
             client = get_llm_client()

@@ -1,10 +1,12 @@
 """
-LLM Client for integrating with OpenAI, Anthropic, or other LLM providers.
-Supports GPT-4, Claude, and other models for enhanced analysis.
+OLLAMA Local LLM Client for using local models via OLLAMA API.
+Supports local models for reasoning, chat, and analysis without API dependencies.
 """
 from __future__ import annotations
 import os
-from typing import Optional, List
+import requests
+import json
+from typing import Optional
 from enum import Enum
 
 from backend.config import settings
@@ -12,63 +14,51 @@ from backend.config import settings
 
 class LLMProvider(str, Enum):
     """Supported LLM providers"""
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    GOOGLE = "google"
+    OLLAMA = "ollama"
 
 
 class LLMClient:
     """
-    Base LLM client supporting multiple providers.
-    Abstracts away provider-specific API differences.
+    OLLAMA LLM client for local model inference.
+    Uses OLLAMA API endpoints for generating text without external API costs.
     """
     
     def __init__(
         self,
         provider: Optional[str] = None,
         model: Optional[str] = None,
-        api_key: Optional[str] = None,
+        api_url: Optional[str] = None,
     ):
         self.provider = provider or settings.llm_provider
         self.model = model or settings.llm_model
-        self.api_key = api_key or settings.llm_api_key
+        self.api_url = api_url or settings.llm_api_url
         
-        # Initialize provider-specific client
-        if self.provider == LLMProvider.OPENAI:
-            self._init_openai()
-        elif self.provider == LLMProvider.ANTHROPIC:
-            self._init_anthropic()
-        elif self.provider == LLMProvider.GOOGLE:
-            self._init_google()
-        else:
-            raise ValueError(f"Unsupported LLM provider: {self.provider}")
+        # Verify OLLAMA provider
+        if self.provider != LLMProvider.OLLAMA:
+            raise ValueError(f"Only OLLAMA provider is supported. Got: {self.provider}")
+        
+        print(f"[LLMClient] Initialized OLLAMA with model: {self.model} at {self.api_url}")
+        self._verify_connection()
     
-    def _init_openai(self):
-        """Initialize OpenAI client"""
+    def _verify_connection(self) -> bool:
+        """Verify OLLAMA is running and accessible"""
         try:
-            from openai import OpenAI
-            self.client = OpenAI(api_key=self.api_key)
-            print(f"[LLMClient] Initialized OpenAI with model: {self.model}")
-        except ImportError:
-            raise ImportError("openai package not installed. Install with: pip install openai")
-    
-    def _init_anthropic(self):
-        """Initialize Anthropic (Claude) client"""
-        try:
-            from anthropic import Anthropic
-            self.client = Anthropic(api_key=self.api_key)
-            print(f"[LLMClient] Initialized Anthropic with model: {self.model}")
-        except ImportError:
-            raise ImportError("anthropic package not installed. Install with: pip install anthropic")
-    
-    def _init_google(self):
-        """Initialize Google Generative AI client"""
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.api_key)
-            print(f"[LLMClient] Initialized Google Generative AI with model: {self.model}")
-        except ImportError:
-            raise ImportError("google-generativeai package not installed")
+            # Try a simple health check with a very short prompt
+            response = requests.post(
+                self.api_url,
+                json={
+                    "model": self.model,
+                    "prompt": "ok",
+                    "stream": False,
+                },
+                timeout=5
+            )
+            if response.status_code == 200:
+                print(f"[LLMClient] OLLAMA connection verified")
+                return True
+        except Exception as e:
+            print(f"[LLMClient] Warning: Could not verify OLLAMA connection: {str(e)}")
+        return False
     
     def generate(
         self,
@@ -78,7 +68,7 @@ class LLMClient:
         max_tokens: int = 2000,
     ) -> str:
         """
-        Generate text using the configured LLM.
+        Generate text using OLLAMA local model.
         
         Args:
             prompt: User prompt/query
@@ -90,84 +80,30 @@ class LLMClient:
             Generated text
         """
         try:
-            if self.provider == LLMProvider.OPENAI:
-                return self._generate_openai(prompt, system_prompt, temperature, max_tokens)
-            elif self.provider == LLMProvider.ANTHROPIC:
-                return self._generate_anthropic(prompt, system_prompt, temperature, max_tokens)
-            elif self.provider == LLMProvider.GOOGLE:
-                return self._generate_google(prompt, system_prompt, temperature, max_tokens)
+            # Build the full prompt with system message if provided
+            full_prompt = prompt
+            if system_prompt:
+                full_prompt = f"{system_prompt}\n\n{prompt}"
+            
+            response = requests.post(
+                self.api_url,
+                json={
+                    "model": self.model,
+                    "prompt": full_prompt,
+                    "stream": False,
+                    "temperature": temperature,
+                    "num_predict": max_tokens,
+                },
+                timeout=300  # 5 minute timeout for long generations
+            )
+            
+            if response.status_code != 200:
+                raise RuntimeError(f"OLLAMA API error: {response.status_code} - {response.text}")
+            
+            result = response.json()
+            return result.get("response", "").strip()
         except Exception as e:
             raise RuntimeError(f"LLM generation failed: {str(e)}")
-    
-    def _generate_openai(
-        self,
-        prompt: str,
-        system_prompt: Optional[str],
-        temperature: float,
-        max_tokens: int,
-    ) -> str:
-        """Generate using OpenAI API"""
-        messages = []
-        
-        if system_prompt:
-            messages.append({"role": "system", "content": system_prompt})
-        
-        messages.append({"role": "user", "content": prompt})
-        
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        
-        return response.choices[0].message.content
-    
-    def _generate_anthropic(
-        self,
-        prompt: str,
-        system_prompt: Optional[str],
-        temperature: float,
-        max_tokens: int,
-    ) -> str:
-        """Generate using Anthropic (Claude) API"""
-        response = self.client.messages.create(
-            model=self.model,
-            max_tokens=max_tokens,
-            system=system_prompt or "",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=temperature,
-        )
-        
-        return response.content[0].text
-    
-    def _generate_google(
-        self,
-        prompt: str,
-        system_prompt: Optional[str],
-        temperature: float,
-        max_tokens: int,
-    ) -> str:
-        """Generate using Google Generative AI"""
-        import google.generativeai as genai
-        
-        # Build full prompt with system message
-        full_prompt = prompt
-        if system_prompt:
-            full_prompt = f"{system_prompt}\n\n{prompt}"
-        
-        model = genai.GenerativeModel(self.model)
-        response = model.generate_content(
-            full_prompt,
-            generation_config=genai.types.GenerationConfig(
-                temperature=temperature,
-                max_output_tokens=max_tokens,
-            ),
-        )
-        
-        return response.text
 
 
 # ============================================================================

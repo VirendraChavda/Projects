@@ -80,10 +80,9 @@ services:
       - REDIS_PORT=6379
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
-      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - LLM_API_URL=${LLM_API_URL:-http://host.docker.internal:11434/api/generate}
+      - EMBED_API_URL=${EMBED_API_URL:-http://host.docker.internal:11434/api/embeddings}
     volumes:
       - ./src:/app/src
       - ./logs:/app/logs
@@ -121,10 +120,9 @@ services:
       - REDIS_PORT=6379
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
-      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - LLM_API_URL=${LLM_API_URL:-http://host.docker.internal:11434/api/generate}
+      - EMBED_API_URL=${EMBED_API_URL:-http://host.docker.internal:11434/api/embeddings}
     volumes:
       - ./src:/app/src
       - ./logs:/app/logs
@@ -157,10 +155,9 @@ services:
       - REDIS_PORT=6379
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
-      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - LLM_PROVIDER=${LLM_PROVIDER:-ollama}
+      - LLM_API_URL=${LLM_API_URL:-http://host.docker.internal:11434/api/generate}
+      - EMBED_API_URL=${EMBED_API_URL:-http://host.docker.internal:11434/api/embeddings}
     volumes:
       - ./src:/app/src
       - ./logs:/app/logs
